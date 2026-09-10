@@ -13,25 +13,37 @@ import {
   Calendar,
   LayoutGrid,
 } from 'lucide-react';
-import { LocalWork, Invoice } from '../../types';
+import { LocalWork, Invoice, DeadlineItem, ActiveTab } from '../../types';
 import { formatINR, formatDate } from '../../utils/formatters';
+import { UpcomingDeadlinesCard } from './UpcomingDeadlinesCard';
 
 interface ProductionDashboardProps {
   localWorks: LocalWork[];
   invoices: Invoice[];
+  deadlines: DeadlineItem[];
   onCreateWork: () => void;
+  onNavigateTab: (tab: ActiveTab) => void;
+  onOpenDeadlineDetails: (deadline: DeadlineItem) => void;
+  onOpenAddDeadlineModal: () => void;
+  onOpenViewAllModal: () => void;
+  onToggleCompleteDeadline: (id: string) => void;
 }
 
 export const ProductionDashboard: React.FC<ProductionDashboardProps> = ({
   localWorks,
   invoices,
+  deadlines,
   onCreateWork,
+  onNavigateTab,
+  onOpenDeadlineDetails,
+  onOpenAddDeadlineModal,
+  onOpenViewAllModal,
+  onToggleCompleteDeadline,
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
 
   // 1. Calculations
-  const urgentWorks = localWorks.filter(w => w.priority === 'Urgent' && w.status !== 'Completed');
   const totalValue = localWorks.reduce((sum, w) => sum + w.amount, 0);
   
   // Payment tracker: Assuming LocalWorks can be linked to Invoices
@@ -51,52 +63,57 @@ export const ProductionDashboard: React.FC<ProductionDashboardProps> = ({
   }, [localWorks, filterStatus, searchTerm]);
 
   return (
-    <div className="p-6 bg-white min-h-screen font-sans text-[#09090B]">
+    <div className="p-4 sm:p-6 bg-white min-h-screen font-sans text-[#09090B] space-y-6 max-w-7xl mx-auto">
       {/* Header & Command Bar */}
-      <header className="flex justify-between items-center mb-6">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
-              Internal Production Tracker
+              Gizmo Operations &amp; Production Hub
             </span>
           </div>
-          <h1 className="text-3xl font-display font-black tracking-tighter">Production Ops</h1>
+          <h1 className="text-2xl sm:text-3xl font-display font-black tracking-tighter">Production Ops</h1>
         </div>
-        <div className="flex gap-2">
-            <button className="px-3 py-1.5 text-xs font-bold border rounded-lg flex items-center gap-2 hover:bg-slate-50">
-              <LayoutGrid className="w-4 h-4"/> View
+        <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigateTab('local-works')}
+              className="px-3 py-2 text-xs font-bold border border-zinc-200 rounded-lg flex items-center gap-2 hover:bg-slate-50 transition"
+            >
+              <LayoutGrid className="w-4 h-4 text-zinc-600"/> View Works
             </button>
-            <button onClick={onCreateWork} className="px-4 py-1.5 text-xs font-bold bg-[#FF5738] text-white rounded-lg flex items-center gap-2 hover:bg-[#ff4220]">
-                <Plus className="w-4 h-4"/> New Work
+            <button
+              onClick={onCreateWork}
+              className="px-4 py-2 text-xs font-bold bg-[#FF5738] hover:bg-[#ff4220] text-white rounded-lg flex items-center gap-2 transition shadow-xs"
+            >
+                <Plus className="w-4 h-4"/> New Work Order
             </button>
         </div>
       </header>
 
-      {/* Alarm Banner */}
-      {urgentWorks.length > 0 && (
-        <div className="mb-6 bg-[#FFF1EE] border border-[#FFB2A1] p-4 rounded-xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-[#FF5738]"/>
-            <span className="font-bold text-sm text-[#09090B]">{urgentWorks.length} Critical Items Need Attention</span>
-          </div>
-          <button className="px-3 py-1.5 text-xs font-bold bg-[#FF5738] text-white rounded-lg">View Urgent</button>
-        </div>
-      )}
+      {/* 1. DASHBOARD DEADLINE HIGHLIGHT CARD (Prominently near the top) */}
+      <UpcomingDeadlinesCard
+        deadlines={deadlines}
+        onNavigateTab={onNavigateTab}
+        onOpenDeadlineDetails={onOpenDeadlineDetails}
+        onOpenAddDeadlineModal={onOpenAddDeadlineModal}
+        onOpenViewAllModal={onOpenViewAllModal}
+        onToggleCompleteDeadline={onToggleCompleteDeadline}
+      />
 
-      {/* Cash Flow */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="p-4 rounded-xl border bg-[#FAFAFA]">
-          <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase">Total Business Value</h3>
-          <p className="text-2xl font-black">{formatINR(totalValue)}</p>
+      {/* Cash Flow / Production Financials */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-xl border border-zinc-200 bg-[#FAFAFA]">
+          <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Total Business Value</h3>
+          <p className="text-2xl font-black mt-1">{formatINR(totalValue)}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-[#FFF1EE] border-[#FFB2A1]">
-          <h3 className="text-[10px] font-mono font-bold text-amber-700 uppercase">Total To Get</h3>
-          <p className="text-2xl font-black text-amber-900">{formatINR(totalValue - 0)}</p>
+        <div className="p-4 rounded-xl border border-[#FFB2A1] bg-[#FFF1EE]">
+          <h3 className="text-[10px] font-mono font-bold text-[#FF5738] uppercase tracking-wider">Total To Get</h3>
+          <p className="text-2xl font-black text-zinc-950 mt-1">{formatINR(totalValue)}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-[#ECFDF5] border-[#10B981]">
-          <h3 className="text-[10px] font-mono font-bold text-emerald-700 uppercase">Total Got</h3>
-          <p className="text-2xl font-black text-emerald-900">{formatINR(0)}</p>
+        <div className="p-4 rounded-xl border border-emerald-200 bg-[#ECFDF5]">
+          <h3 className="text-[10px] font-mono font-bold text-emerald-700 uppercase tracking-wider">Active In Production</h3>
+          <p className="text-2xl font-black text-emerald-950 mt-1">{localWorks.filter(w => w.status !== 'Completed').length} Works</p>
         </div>
       </div>
 

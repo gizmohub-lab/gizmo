@@ -12,6 +12,8 @@ import { ProductionDashboard } from './components/portal/ProductionDashboard';
 import { ProjectsView } from './components/portal/ProjectsView';
 import { PeopleView } from './components/portal/PeopleView';
 import { LocalWorksView } from './components/portal/LocalWorksView';
+import { DeadlinesManagerModal } from './components/portal/DeadlinesManagerModal';
+import { DeadlineDetailModal } from './components/portal/DeadlineDetailModal';
 import {
   Invoice,
   Client,
@@ -20,6 +22,7 @@ import {
   InvoiceSettings,
   InvoiceStatus,
   PaymentRecord,
+  DeadlineItem,
 } from './types';
 import {
   loadInvoices,
@@ -32,13 +35,15 @@ import {
   saveLocalWorks,
   loadSettings,
   saveSettings,
+  loadDeadlines,
+  saveDeadlines,
 } from './data/mockData';
 import { getFormattedTimestamp, formatINR } from './utils/formatters';
 import { generateInvoicePDF } from './utils/pdfGenerator';
 
 export default function App() {
   // Navigation State
-  const [activeTab, setActiveTab] = useState<AdminTab>('invoice');
+  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Core Data States with localStorage persistence
@@ -47,6 +52,12 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>(() => loadProjects());
   const [localWorks, setLocalWorks] = useState<LocalWork[]>(() => loadLocalWorks());
   const [settings, setSettings] = useState<InvoiceSettings>(() => loadSettings());
+  const [deadlines, setDeadlines] = useState<DeadlineItem[]>(() => loadDeadlines());
+
+  // Deadline Modals State
+  const [showDeadlinesModal, setShowDeadlinesModal] = useState(false);
+  const [selectedDeadline, setSelectedDeadline] = useState<DeadlineItem | null>(null);
+  const [showDeadlineDetailModal, setShowDeadlineDetailModal] = useState(false);
 
   // Invoicing Views & Modals State
   const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
@@ -76,6 +87,41 @@ export default function App() {
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
+
+  useEffect(() => {
+    saveDeadlines(deadlines);
+  }, [deadlines]);
+
+  // Deadline Operations
+  const handleAddDeadline = (newDl: DeadlineItem) => {
+    setDeadlines([newDl, ...deadlines]);
+  };
+
+  const handleUpdateDeadline = (updated: DeadlineItem) => {
+    setDeadlines(deadlines.map((d) => (d.id === updated.id ? updated : d)));
+  };
+
+  const handleDeleteDeadline = (id: string) => {
+    setDeadlines(deadlines.filter((d) => d.id !== id));
+  };
+
+  const handleToggleCompleteDeadline = (id: string) => {
+    setDeadlines(
+      deadlines.map((d) =>
+        d.id === id ? { ...d, isCompleted: !d.isCompleted } : d
+      )
+    );
+  };
+
+  const handleOpenDeadlineDetails = (deadline: DeadlineItem) => {
+    setSelectedDeadline(deadline);
+    setShowDeadlineDetailModal(true);
+  };
+
+  const handleStartEditFromDetail = (deadline: DeadlineItem) => {
+    setShowDeadlineDetailModal(false);
+    setShowDeadlinesModal(true);
+  };
 
   // Invoice Actions
   const handleStartCreateInvoice = () => {
@@ -418,7 +464,16 @@ export default function App() {
             <ProductionDashboard
               localWorks={localWorks}
               invoices={invoices}
-              onCreateWork={() => setActiveTab('local-works')} 
+              deadlines={deadlines}
+              onCreateWork={() => setActiveTab('local-works')}
+              onNavigateTab={(tab) => {
+                setActiveTab(tab);
+                setIsCreatingInvoice(false);
+              }}
+              onOpenDeadlineDetails={handleOpenDeadlineDetails}
+              onOpenAddDeadlineModal={() => setShowDeadlinesModal(true)}
+              onOpenViewAllModal={() => setShowDeadlinesModal(true)}
+              onToggleCompleteDeadline={handleToggleCompleteDeadline}
             />
           )}
 
@@ -530,6 +585,37 @@ export default function App() {
       <ShareModal
         invoice={shareInvoice}
         onClose={() => setShareInvoice(null)}
+      />
+
+      {/* MODAL 5: ALL DEADLINES MANAGER MODAL (View, Search, Filter, Create & Edit Deadlines) */}
+      <DeadlinesManagerModal
+        isOpen={showDeadlinesModal}
+        onClose={() => setShowDeadlinesModal(false)}
+        deadlines={deadlines}
+        clients={clients}
+        onAddDeadline={handleAddDeadline}
+        onUpdateDeadline={handleUpdateDeadline}
+        onDeleteDeadline={handleDeleteDeadline}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setIsCreatingInvoice(false);
+        }}
+      />
+
+      {/* MODAL 6: SINGLE DEADLINE DETAIL MODAL (Quick View & Navigation) */}
+      <DeadlineDetailModal
+        deadline={selectedDeadline}
+        isOpen={showDeadlineDetailModal}
+        onClose={() => {
+          setShowDeadlineDetailModal(false);
+          setSelectedDeadline(null);
+        }}
+        onEdit={(dl) => handleStartEditFromDetail(dl)}
+        onToggleComplete={handleToggleCompleteDeadline}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setIsCreatingInvoice(false);
+        }}
       />
     </div>
   );

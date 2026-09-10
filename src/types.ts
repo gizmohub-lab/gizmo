@@ -176,3 +176,21 @@ export interface InvoiceSettings {
 }
 
 export type ActiveTab = 'dashboard' | 'projects' | 'people' | 'local-works' | 'invoice';
+
+export type DeadlineUrgency = 'NORMAL' | 'APPROACHING' | 'URGENT' | 'DUE_NOW' | 'OVERDUE';
+
+export interface DeadlineItem {
+  id: string;
+  title: string;
+  type: 'project' | 'local-work' | 'order' | 'task' | 'invoice' | 'custom';
+  referenceId?: string;
+  deadlineDate: string; // YYYY-MM-DD
+  deadlineTime: string; // HH:mm
+  priority?: 'Normal' | 'Urgent';
+  status?: string;
+  relatedUrl?: string;
+  clientName?: string;
+  description?: string;
+  assignedTo?: string;
+  isCompleted?: boolean;
+}

@@ -10,17 +10,23 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { Invoice, Project, LocalWork, Client } from '../../types';
+import { Invoice, Project, LocalWork, Client, DeadlineItem, ActiveTab } from '../../types';
 import { formatINR, formatDate } from '../../utils/formatters';
+import { UpcomingDeadlinesCard } from './UpcomingDeadlinesCard';
 
 interface DashboardViewProps {
   invoices: Invoice[];
   projects: Project[];
   localWorks: LocalWork[];
   clients: Client[];
-  onNavigateTab: (tab: any) => void;
+  deadlines?: DeadlineItem[];
+  onNavigateTab: (tab: ActiveTab) => void;
   onCreateInvoice: () => void;
   onViewInvoice: (invoice: Invoice) => void;
+  onOpenDeadlineDetails?: (deadline: DeadlineItem) => void;
+  onOpenAddDeadlineModal?: () => void;
+  onOpenViewAllModal?: () => void;
+  onToggleCompleteDeadline?: (id: string) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -28,9 +34,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   projects,
   localWorks,
   clients,
+  deadlines = [],
   onNavigateTab,
   onCreateInvoice,
   onViewInvoice,
+  onOpenDeadlineDetails = () => {},
+  onOpenAddDeadlineModal = () => {},
+  onOpenViewAllModal = () => {},
+  onToggleCompleteDeadline = () => {},
 }) => {
   const finalizedInvoices = invoices.filter((i) => i.status !== 'Draft' && i.status !== 'Cancelled');
   const totalBilled = finalizedInvoices.reduce((s, i) => s + i.grandTotal, 0);
@@ -65,7 +76,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={() => onNavigateTab('invoice')}
-              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 transition backdrop-blur-xs flex items-center gap-2"
+              className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/20 transition backdrop-blur-xs flex items-center gap-2 cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               <span>Invoicing Hub</span>
@@ -73,7 +84,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={onCreateInvoice}
-              className="px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-violet-950/50 transition flex items-center gap-2"
+              className="px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-violet-950/50 transition flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>+ Create Invoice</span>
@@ -81,6 +92,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* DASHBOARD DEADLINE HIGHLIGHT CARD */}
+      <UpcomingDeadlinesCard
+        deadlines={deadlines}
+        onNavigateTab={onNavigateTab}
+        onOpenDeadlineDetails={onOpenDeadlineDetails}
+        onOpenAddDeadlineModal={onOpenAddDeadlineModal}
+        onOpenViewAllModal={onOpenViewAllModal}
+        onToggleCompleteDeadline={onToggleCompleteDeadline}
+      />
 
       {/* Top 4 Metric KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

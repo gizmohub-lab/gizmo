@@ -4,6 +4,7 @@ import {
   Project,
   LocalWork,
   InvoiceSettings,
+  DeadlineItem,
 } from '../types';
 
 export const defaultSettings: InvoiceSettings = {
@@ -588,6 +589,93 @@ export const initialInvoices: Invoice[] = [
   },
 ];
 
+export const initialDeadlines: DeadlineItem[] = [
+  {
+    id: 'dl-1',
+    title: 'Order #GZ-1024',
+    type: 'order',
+    referenceId: 'lw-3',
+    clientName: 'Apex Retail Brands',
+    deadlineDate: '2026-09-09',
+    deadlineTime: '16:30',
+    priority: 'Urgent',
+    status: 'In Progress',
+    description: 'Promotional vinyl signage banner and window graphics.',
+    assignedTo: 'Gizmo Print Studio',
+    isCompleted: false,
+  },
+  {
+    id: 'dl-2',
+    title: 'Order #GZ-1028 — Official Seal & Stationery',
+    type: 'order',
+    referenceId: 'lw-2',
+    clientName: 'DARUL HASANIYYAH SNEC',
+    deadlineDate: '2026-09-10',
+    deadlineTime: '14:30',
+    priority: 'Urgent',
+    status: 'In Progress',
+    description: '250gsm parchment printing & wooden seal stamp pressing.',
+    assignedTo: 'Production Lead',
+    isCompleted: false,
+  },
+  {
+    id: 'dl-3',
+    title: 'Client Project — Brand Identity',
+    type: 'project',
+    referenceId: 'proj-1',
+    clientName: 'DARUL HASANIYYAH SNEC',
+    deadlineDate: '2026-09-11',
+    deadlineTime: '11:00',
+    priority: 'Normal',
+    status: 'In Progress',
+    description: 'Master vector logo suite, typography guidelines, and letterhead artwork.',
+    assignedTo: 'Lead Designer',
+    isCompleted: false,
+  },
+  {
+    id: 'dl-4',
+    title: 'Lumin Studio Web Platform — CMS Delivery',
+    type: 'project',
+    referenceId: 'proj-3',
+    clientName: 'Lumin Studio',
+    deadlineDate: '2026-09-12',
+    deadlineTime: '16:00',
+    priority: 'Normal',
+    status: 'In Progress',
+    description: 'Interactive architectural showcase & project filter module.',
+    assignedTo: 'Web Architect',
+    isCompleted: false,
+  },
+  {
+    id: 'dl-5',
+    title: 'Invoice Settlement #A00003 — Apex Retail',
+    type: 'invoice',
+    referenceId: 'inv-a00003',
+    clientName: 'Apex Retail Brands',
+    deadlineDate: '2026-09-13',
+    deadlineTime: '17:00',
+    priority: 'Normal',
+    status: 'Pending',
+    description: 'Phase 1 corporate identity balance payment settlement.',
+    assignedTo: 'Finance Ops',
+    isCompleted: false,
+  },
+  {
+    id: 'dl-6',
+    title: 'Craft & Co Autumn Sale Banner Delivery',
+    type: 'local-work',
+    referenceId: 'lw-3',
+    clientName: 'Craft & Co Boutique',
+    deadlineDate: '2026-09-15',
+    deadlineTime: '15:30',
+    priority: 'Normal',
+    status: 'Pending',
+    description: '10x4 ft storefront exterior banner print & eyelet installation.',
+    assignedTo: 'Field Operations',
+    isCompleted: false,
+  },
+];
+
 // Helper functions for persistent storage
 const STORAGE_KEYS = {
   INVOICES: 'gizmo_portal_invoices_v1',
@@ -595,6 +683,7 @@ const STORAGE_KEYS = {
   CLIENTS: 'gizmo_portal_clients_v1',
   PROJECTS: 'gizmo_portal_projects_v1',
   LOCAL_WORKS: 'gizmo_portal_local_works_v1',
+  DEADLINES: 'gizmo_portal_deadlines_v1',
 };
 
 export function loadInvoices(): Invoice[] {
@@ -696,3 +785,24 @@ export function saveLocalWorks(works: LocalWork[]): void {
     console.warn('Error saving local works', e);
   }
 }
+
+export function loadDeadlines(): DeadlineItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DEADLINES);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn('Error reading deadlines from localStorage', e);
+  }
+  return initialDeadlines;
+}
+
+export function saveDeadlines(deadlines: DeadlineItem[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.DEADLINES, JSON.stringify(deadlines));
+  } catch (e) {
+    console.warn('Error saving deadlines', e);
+  }
+}
+
