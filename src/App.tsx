@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { AdminSidebar, AdminTab } from './components/layout/AdminSidebar';
-import { AdminNavbar } from './components/layout/AdminNavbar';
+import { Navbar } from './components/layout/Navbar';
+import { AdminLayout } from './components/layout/AdminLayout';
+import { HomeView } from './components/public/HomeView';
+import { ServicesView } from './components/public/ServicesView';
+import { WorkView } from './components/public/WorkView';
+import { AboutView } from './components/public/AboutView';
+import { MyProjectsView } from './components/public/MyProjectsView';
+import { PublicFooter } from './components/public/PublicFooter';
+import { StartProjectModal } from './components/public/StartProjectModal';
 import { InvoiceDashboard } from './components/invoice/InvoiceDashboard';
 import { InvoiceList } from './components/invoice/InvoiceList';
 import { InvoiceForm } from './components/invoice/InvoiceForm';
@@ -23,6 +30,8 @@ import {
   InvoiceStatus,
   PaymentRecord,
   DeadlineItem,
+  AppRoute,
+  AdminNotification,
 } from './types';
 import {
   loadInvoices,
@@ -37,20 +46,108 @@ import {
   saveSettings,
   loadDeadlines,
   saveDeadlines,
+  loadCategories,
+  saveCategories,
 } from './data/mockData';
 import { getFormattedTimestamp, formatINR } from './utils/formatters';
 import { generateInvoicePDF } from './utils/pdfGenerator';
+import { convertLocalWorkToDeadlineItem, generateNextWorkId } from './utils/localWorkUtils';
+
+function pathToRoute(path: string): AppRoute {
+  const cleanPath = path.toLowerCase().replace(/\/$/, '') || '/';
+  if (cleanPath === '/' || cleanPath === '/home') return 'home';
+  if (cleanPath === '/services') return 'services';
+  if (cleanPath === '/work') return 'work';
+  if (cleanPath === '/about') return 'about';
+  if (cleanPath === '/my-projects' || cleanPath === '/projects-client') return 'my-projects';
+  if (cleanPath === '/admin' || cleanPath === '/admin/dashboard') return 'admin-dashboard';
+  if (cleanPath === '/admin/projects' || cleanPath.startsWith('/admin/projects/') || cleanPath.startsWith('/admin/orders/')) return 'admin-projects';
+  if (cleanPath === '/admin/clients' || cleanPath === '/admin/people') return 'admin-clients';
+  if (cleanPath === '/admin/local-works' || cleanPath === '/admin/works') return 'admin-local-works';
+  if (cleanPath === '/admin/invoices' || cleanPath === '/admin/invoice') return 'admin-invoices';
+  if (cleanPath === '/admin/settings') return 'admin-settings';
+  return 'home';
+}
+
+function routeToPath(route: AppRoute): string {
+  switch (route) {
+    case 'home':
+      return '/';
+    case 'services':
+      return '/services';
+    case 'work':
+      return '/work';
+    case 'about':
+      return '/about';
+    case 'my-projects':
+      return '/my-projects';
+    case 'admin':
+    case 'admin-dashboard':
+      return '/admin/dashboard';
+    case 'admin-projects':
+      return '/admin/projects';
+    case 'admin-clients':
+      return '/admin/clients';
+    case 'admin-local-works':
+      return '/admin/local-works';
+    case 'admin-invoices':
+      return '/admin/invoices';
+    case 'admin-settings':
+      return '/admin/settings';
+    default:
+      return '/';
+  }
+}
 
 export default function App() {
-  // Navigation State
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Navigation State with Zero-Refresh Browser History Sync
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>(() => {
+    if (typeof window !== 'undefined') {
+      return pathToRoute(window.location.pathname);
+    }
+    return 'home';
+  });
+
+  const [showStartProjectModal, setShowStartProjectModal] = useState(false);
+  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
+
+  // Live Notifications State for Director CRM
+  const [notifications, setNotifications] = useState<AdminNotification[]>([
+    {
+      id: 'notif-1',
+      title: 'Urgent Local Work Delivery',
+      message: 'Grand Opening Star Flex Board order is due for production today.',
+      timestamp: '15m ago',
+      read: false,
+      type: 'warning',
+      route: 'admin-local-works',
+    },
+    {
+      id: 'notif-2',
+      title: 'Invoice Balance Due',
+      message: 'Invoice #GIZ-2025-001 has ₹12,500 pending collection.',
+      timestamp: '1h ago',
+      read: false,
+      type: 'alert',
+      route: 'admin-invoices',
+    },
+    {
+      id: 'notif-3',
+      title: 'Identity System Approved',
+      message: 'Malabar Heritage Visual Identity approved by client account.',
+      timestamp: '4h ago',
+      read: true,
+      type: 'success',
+      route: 'admin-projects',
+    },
+  ]);
 
   // Core Data States with localStorage persistence
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadInvoices());
   const [clients, setClients] = useState<Client[]>(() => loadClients());
   const [projects, setProjects] = useState<Project[]>(() => loadProjects());
   const [localWorks, setLocalWorks] = useState<LocalWork[]>(() => loadLocalWorks());
+  const [categories, setCategories] = useState<string[]>(() => loadCategories());
   const [settings, setSettings] = useState<InvoiceSettings>(() => loadSettings());
   const [deadlines, setDeadlines] = useState<DeadlineItem[]>(() => loadDeadlines());
 
@@ -85,12 +182,135 @@ export default function App() {
   }, [localWorks]);
 
   useEffect(() => {
+    saveCategories(categories);
+  }, [categories]);
+
+  useEffect(() => {
     saveSettings(settings);
   }, [settings]);
 
   useEffect(() => {
     saveDeadlines(deadlines);
   }, [deadlines]);
+
+  // Synchronize LocalWorks to Deadlines so the Dashboard Upcoming Deadlines highlight card / alarm displays them
+  useEffect(() => {
+    setDeadlines((prevDeadlines) => {
+      let changed = false;
+      const nextDeadlines = [...prevDeadlines];
+
+      localWorks.forEach((work) => {
+        const existingIdx = nextDeadlines.findIndex(
+          (d) => d.referenceId === work.id || d.id === `dl-${work.id}`
+        );
+        const converted = convertLocalWorkToDeadlineItem(work);
+
+        if (existingIdx !== -1) {
+          const curr = nextDeadlines[existingIdx];
+          if (
+            curr.title !== converted.title ||
+            curr.deadlineDate !== converted.deadlineDate ||
+            curr.deadlineTime !== converted.deadlineTime ||
+            curr.isCompleted !== converted.isCompleted ||
+            curr.priority !== converted.priority ||
+            curr.status !== converted.status
+          ) {
+            nextDeadlines[existingIdx] = {
+              ...curr,
+              ...converted,
+            };
+            changed = true;
+          }
+        } else {
+          nextDeadlines.unshift(converted);
+          changed = true;
+        }
+      });
+
+      return changed ? nextDeadlines : prevDeadlines;
+    });
+  }, [localWorks]);
+
+  // Local Works CRUD Handlers
+  const handleAddLocalWork = (newWork: LocalWork) => {
+    setLocalWorks((prev) => [newWork, ...prev]);
+  };
+
+  const handleUpdateLocalWork = (updatedWork: LocalWork) => {
+    setLocalWorks((prev) => prev.map((w) => (w.id === updatedWork.id ? updatedWork : w)));
+  };
+
+  const handleDeleteLocalWork = (id: string) => {
+    setLocalWorks((prev) => prev.filter((w) => w.id !== id));
+    setDeadlines((prev) => prev.filter((d) => d.referenceId !== id && d.id !== `dl-${id}`));
+  };
+
+  const handleDuplicateLocalWork = (work: LocalWork) => {
+    const nextId = generateNextWorkId(localWorks);
+    const duplicated: LocalWork = {
+      ...work,
+      id: `lw-${Date.now()}`,
+      workId: nextId,
+      title: `${work.title} (Copy)`,
+      status: 'New',
+      revisionCount: 0,
+      revisions: [],
+      history: [
+        {
+          id: `hist-${Date.now()}`,
+          timestamp: `10 Sep 2026 · 11:35 AM`,
+          action: `Duplicated from ${work.workId || work.id}`,
+        },
+      ],
+    };
+    setLocalWorks((prev) => [duplicated, ...prev]);
+  };
+
+  const handleImportWorks = (newWorks: LocalWork[]) => {
+    setLocalWorks((prev) => [...newWorks, ...prev]);
+  };
+
+  const handleSaveCategories = (newCategories: string[]) => {
+    setCategories(newCategories);
+  };
+
+  const pendingLocalWorksCount = localWorks.filter(
+    (w) => w.status !== 'Completed' && w.status !== 'Cancelled'
+  ).length;
+
+  // Navigation & History Sync Engine
+  const navigate = (route: AppRoute, replace = false) => {
+    setCurrentRoute(route);
+    setIsCreatingInvoice(false);
+    const targetPath = routeToPath(route);
+    if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+      if (replace) {
+        window.history.replaceState({ route }, '', targetPath);
+      } else {
+        window.history.pushState({ route }, '', targetPath);
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = pathToRoute(window.location.pathname);
+      setCurrentRoute(route);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   // Deadline Operations
   const handleAddDeadline = (newDl: DeadlineItem) => {
@@ -127,12 +347,14 @@ export default function App() {
   const handleStartCreateInvoice = () => {
     setEditingInvoice(null);
     setIsCreatingInvoice(true);
+    navigate('admin-invoices');
   };
 
   const handleEditInvoice = (invoice: Invoice) => {
     setEditingInvoice(invoice);
     setIsCreatingInvoice(true);
     setPreviewInvoice(null);
+    navigate('admin-invoices');
   };
 
   const handleSaveInvoice = (invoicePayload: Invoice, isDraft: boolean) => {
@@ -147,6 +369,7 @@ export default function App() {
     }
     setIsCreatingInvoice(false);
     setEditingInvoice(null);
+    navigate('admin-invoices');
     // Show newly created invoice in preview modal
     setPreviewInvoice(invoicePayload);
   };
@@ -303,7 +526,7 @@ export default function App() {
 
     setEditingInvoice(prefilledInvoice);
     setIsCreatingInvoice(true);
-    setActiveTab('invoice');
+    navigate('admin-invoices');
   };
 
   const handleCreateInvoiceForClient = (client: Client) => {
@@ -364,7 +587,7 @@ export default function App() {
 
     setEditingInvoice(prefilledInvoice);
     setIsCreatingInvoice(true);
-    setActiveTab('invoice');
+    navigate('admin-invoices');
   };
 
   const handleCreateInvoiceForLocalWork = (work: LocalWork) => {
@@ -431,44 +654,46 @@ export default function App() {
 
     setEditingInvoice(prefilledInvoice);
     setIsCreatingInvoice(true);
-    setActiveTab('invoice');
+    navigate('admin-invoices');
   };
 
+  const isAdminRoute = currentRoute.startsWith('admin');
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased">
-      {/* Top Navigation Bar */}
-      <AdminNavbar
-        activeTab={activeTab}
-        onCreateInvoice={handleStartCreateInvoice}
-        onOpenSettings={() => setShowSettingsModal(true)}
-        onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
-      />
-
-      {/* Main Studio Frame */}
-      <div className="flex-1 flex max-w-[1600px] w-full mx-auto">
-        {/* Left Admin Sidebar (Section 1) */}
-        <AdminSidebar
-          activeTab={activeTab}
-          onSelectTab={(tab) => {
-            setActiveTab(tab);
-            setIsCreatingInvoice(false);
-          }}
-          mobileOpen={mobileMenuOpen}
-          onCloseMobile={() => setMobileMenuOpen(false)}
-        />
-
-        {/* Dynamic Center Work Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">
+    <div className="min-h-screen bg-white text-zinc-900 flex flex-col font-sans antialiased selection:bg-[#FF5738] selection:text-white">
+      {isAdminRoute ? (
+        /* ========================================================================= */
+        /* TIER 2: ADMIN / DIRECTOR CRM SHELL (`AdminLayout`)                        */
+        /* ========================================================================= */
+        <AdminLayout
+          currentRoute={currentRoute}
+          onNavigate={navigate}
+          pendingLocalWorksCount={pendingLocalWorksCount}
+          pendingInvoicesCount={
+            invoices.filter((i) => i.status === 'Pending' || i.status === 'Draft').length
+          }
+          notifications={notifications}
+          onMarkNotificationAsRead={handleMarkNotificationAsRead}
+          onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+          onLogout={() => navigate('home')}
+          onOpenSettings={() => setShowSettingsModal(true)}
+          onCreateInvoice={handleStartCreateInvoice}
+          searchTerm={invoiceSearchTerm}
+          onSearchChange={setInvoiceSearchTerm}
+        >
           {/* TAB 1: DASHBOARD */}
-          {activeTab === 'dashboard' && (
+          {currentRoute === 'admin-dashboard' && (
             <ProductionDashboard
               localWorks={localWorks}
               invoices={invoices}
               deadlines={deadlines}
-              onCreateWork={() => setActiveTab('local-works')}
+              onCreateWork={() => navigate('admin-local-works')}
               onNavigateTab={(tab) => {
-                setActiveTab(tab);
-                setIsCreatingInvoice(false);
+                if (tab === 'dashboard') navigate('admin-dashboard');
+                else if (tab === 'projects') navigate('admin-projects');
+                else if (tab === 'people') navigate('admin-clients');
+                else if (tab === 'local-works') navigate('admin-local-works');
+                else if (tab === 'invoice') navigate('admin-invoices');
               }}
               onOpenDeadlineDetails={handleOpenDeadlineDetails}
               onOpenAddDeadlineModal={() => setShowDeadlinesModal(true)}
@@ -478,7 +703,7 @@ export default function App() {
           )}
 
           {/* TAB 2: PROJECTS */}
-          {activeTab === 'projects' && (
+          {currentRoute === 'admin-projects' && (
             <ProjectsView
               projects={projects}
               invoices={invoices}
@@ -489,8 +714,8 @@ export default function App() {
             />
           )}
 
-          {/* TAB 3: PEOPLE */}
-          {activeTab === 'people' && (
+          {/* TAB 3: CLIENTS / PEOPLE */}
+          {currentRoute === 'admin-clients' && (
             <PeopleView
               clients={clients}
               invoices={invoices}
@@ -501,19 +726,25 @@ export default function App() {
           )}
 
           {/* TAB 4: LOCAL WORKS */}
-          {activeTab === 'local-works' && (
+          {currentRoute === 'admin-local-works' && (
             <LocalWorksView
               localWorks={localWorks}
               invoices={invoices}
               clients={clients}
-              onAddLocalWork={(work) => setLocalWorks([work, ...localWorks])}
+              categories={categories}
+              onAddLocalWork={handleAddLocalWork}
+              onUpdateLocalWork={handleUpdateLocalWork}
+              onDeleteLocalWork={handleDeleteLocalWork}
+              onDuplicateLocalWork={handleDuplicateLocalWork}
+              onSaveCategories={handleSaveCategories}
+              onImportWorks={handleImportWorks}
               onCreateInvoiceForWork={handleCreateInvoiceForLocalWork}
               onViewInvoice={(inv) => setPreviewInvoice(inv)}
             />
           )}
 
-          {/* TAB 5: INVOICE (DEDICATED INVOICE WORKSPACE) */}
-          {activeTab === 'invoice' && (
+          {/* TAB 5: INVOICES WORKSPACE */}
+          {currentRoute === 'admin-invoices' && (
             <>
               {isCreatingInvoice ? (
                 <InvoiceForm
@@ -533,10 +764,7 @@ export default function App() {
                 />
               ) : (
                 <div className="space-y-6 max-w-6xl mx-auto pb-12">
-                  {/* Section 2: Invoice Dashboard Top Summary Cards */}
                   <InvoiceDashboard invoices={invoices} />
-
-                  {/* Section 3: Invoice List Table with Filters & Actions */}
                   <InvoiceList
                     invoices={invoices}
                     onCreateInvoice={handleStartCreateInvoice}
@@ -547,15 +775,111 @@ export default function App() {
                     onDownloadPdf={handleDownloadPdf}
                     onDeleteInvoice={handleDeleteInvoice}
                     onOpenSettings={() => setShowSettingsModal(true)}
+                    searchTerm={invoiceSearchTerm}
+                    onSearchChange={setInvoiceSearchTerm}
                   />
                 </div>
               )}
             </>
           )}
-        </main>
-      </div>
 
-      {/* MODAL 1: INVOICE PREVIEW MODAL (Full HTML/PDF Document matching Darul Hasaniyyah Reference) */}
+          {/* TAB 6: ADMIN SETTINGS SUMMARY */}
+          {currentRoute === 'admin-settings' && (
+            <div className="max-w-4xl mx-auto p-6 sm:p-8 bg-white rounded-2xl border border-zinc-200 shadow-2xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-zinc-200">
+                <div>
+                  <h2 className="text-xl font-black text-zinc-950 tracking-tight">Studio Configuration &amp; Operations</h2>
+                  <p className="text-xs text-zinc-500 mt-1">Manage corporate entity, GSTIN registration, UPI payment accounts, and invoice terms.</p>
+                </div>
+                <button
+                  onClick={() => setShowSettingsModal(true)}
+                  className="px-4 py-2.5 bg-[#FF5738] hover:bg-[#ff4220] text-white rounded-xl text-xs font-bold transition shadow-sm"
+                >
+                  Edit Studio Settings
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200 space-y-2">
+                  <span className="font-bold text-zinc-400 uppercase text-[10px] tracking-wider">Business Entity</span>
+                  <div className="font-black text-base text-zinc-900">{settings.businessProfile.name}</div>
+                  <div className="text-zinc-600 leading-relaxed">{settings.businessProfile.address}</div>
+                  <div className="font-mono text-zinc-500 pt-1">GSTIN: {settings.businessProfile.gstin}</div>
+                  <div className="text-zinc-500">Phone: {settings.businessProfile.phone}</div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200 space-y-2">
+                  <span className="font-bold text-zinc-400 uppercase text-[10px] tracking-wider">UPI &amp; Digital Banking</span>
+                  <div className="font-black text-base text-zinc-900">{settings.paymentConfig.upiId}</div>
+                  <div className="text-zinc-600">Bank: {settings.paymentConfig.bankName}</div>
+                  <div className="font-mono text-zinc-500">A/C: {settings.paymentConfig.accountNumber}</div>
+                  <div className="font-mono text-zinc-500">IFSC: {settings.paymentConfig.ifsc}</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </AdminLayout>
+      ) : (
+        /* ========================================================================= */
+        /* TIER 1: PUBLIC CLIENT PORTAL TIER (`Navbar` + Views + `PublicFooter`)     */
+        /* ========================================================================= */
+        <div className="min-h-screen flex flex-col bg-white text-zinc-900">
+          <Navbar
+            currentRoute={currentRoute}
+            onNavigate={navigate}
+            activeProjectsCount={projects.filter((p) => p.status !== 'Completed').length || 3}
+            onOpenStartProject={() => setShowStartProjectModal(true)}
+          />
+
+          <main className="flex-1 pt-16 sm:pt-20">
+            {currentRoute === 'home' && (
+              <HomeView
+                onNavigate={navigate}
+                onOpenStartProject={() => setShowStartProjectModal(true)}
+                activeProjectsCount={projects.filter((p) => p.status !== 'Completed').length || 3}
+              />
+            )}
+
+            {currentRoute === 'services' && (
+              <ServicesView
+                onNavigate={navigate}
+                onOpenStartProject={() => setShowStartProjectModal(true)}
+              />
+            )}
+
+            {currentRoute === 'work' && (
+              <WorkView
+                onNavigate={navigate}
+                onOpenStartProject={() => setShowStartProjectModal(true)}
+              />
+            )}
+
+            {currentRoute === 'about' && (
+              <AboutView
+                onNavigate={navigate}
+                onOpenStartProject={() => setShowStartProjectModal(true)}
+              />
+            )}
+
+            {currentRoute === 'my-projects' && (
+              <MyProjectsView
+                projects={projects}
+                onNavigate={navigate}
+                onOpenStartProject={() => setShowStartProjectModal(true)}
+              />
+            )}
+          </main>
+
+          <PublicFooter
+            onNavigate={navigate}
+            onOpenStartProject={() => setShowStartProjectModal(true)}
+          />
+        </div>
+      )}
+
+      {/* ========================================================================= */
+      /* GLOBAL UNIFIED MODALS                                                      */
+      /* ========================================================================= */}
       <InvoicePreviewModal
         invoice={previewInvoice}
         onClose={() => setPreviewInvoice(null)}
@@ -565,7 +889,6 @@ export default function App() {
         onMarkAsPaid={handleMarkAsPaid}
       />
 
-      {/* MODAL 2: INVOICE SETTINGS MODAL (Business Profile, Numbering, UPI, GST, Footer) */}
       {showSettingsModal && (
         <InvoiceSettingsModal
           settings={settings}
@@ -574,20 +897,17 @@ export default function App() {
         />
       )}
 
-      {/* MODAL 3: RECORD PAYMENT MODAL (Section 14) */}
       <PaymentModal
         invoice={paymentInvoice}
         onClose={() => setPaymentInvoice(null)}
         onRecordPayment={handleRecordPayment}
       />
 
-      {/* MODAL 4: SHARE INVOICE MODAL (WhatsApp, Email, Copy Text, Direct PDF) */}
       <ShareModal
         invoice={shareInvoice}
         onClose={() => setShareInvoice(null)}
       />
 
-      {/* MODAL 5: ALL DEADLINES MANAGER MODAL (View, Search, Filter, Create & Edit Deadlines) */}
       <DeadlinesManagerModal
         isOpen={showDeadlinesModal}
         onClose={() => setShowDeadlinesModal(false)}
@@ -597,12 +917,14 @@ export default function App() {
         onUpdateDeadline={handleUpdateDeadline}
         onDeleteDeadline={handleDeleteDeadline}
         onNavigateTab={(tab) => {
-          setActiveTab(tab);
-          setIsCreatingInvoice(false);
+          if (tab === 'dashboard') navigate('admin-dashboard');
+          else if (tab === 'projects') navigate('admin-projects');
+          else if (tab === 'people') navigate('admin-clients');
+          else if (tab === 'local-works') navigate('admin-local-works');
+          else if (tab === 'invoice') navigate('admin-invoices');
         }}
       />
 
-      {/* MODAL 6: SINGLE DEADLINE DETAIL MODAL (Quick View & Navigation) */}
       <DeadlineDetailModal
         deadline={selectedDeadline}
         isOpen={showDeadlineDetailModal}
@@ -613,8 +935,20 @@ export default function App() {
         onEdit={(dl) => handleStartEditFromDetail(dl)}
         onToggleComplete={handleToggleCompleteDeadline}
         onNavigateTab={(tab) => {
-          setActiveTab(tab);
-          setIsCreatingInvoice(false);
+          if (tab === 'dashboard') navigate('admin-dashboard');
+          else if (tab === 'projects') navigate('admin-projects');
+          else if (tab === 'people') navigate('admin-clients');
+          else if (tab === 'local-works') navigate('admin-local-works');
+          else if (tab === 'invoice') navigate('admin-invoices');
+        }}
+      />
+
+      <StartProjectModal
+        isOpen={showStartProjectModal}
+        onClose={() => setShowStartProjectModal(false)}
+        onProjectCreated={(newProject) => {
+          setProjects([newProject, ...projects]);
+          navigate('my-projects');
         }}
       />
     </div>

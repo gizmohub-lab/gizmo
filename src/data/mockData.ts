@@ -5,6 +5,9 @@ import {
   LocalWork,
   InvoiceSettings,
   DeadlineItem,
+  CustomDesigner,
+  DesignCategory,
+  WorkTypeItem,
 } from '../types';
 
 export const defaultSettings: InvoiceSettings = {
@@ -148,39 +151,598 @@ export const initialProjects: Project[] = [
   },
 ];
 
+export const initialWorkTypes: WorkTypeItem[] = [
+  {
+    id: 'wt-poster',
+    name: 'Poster',
+    description: 'Static graphic/design works (Social Media, Event, Print, Banner)',
+    isActive: true,
+    isSystemDefault: true,
+  },
+  {
+    id: 'wt-motion',
+    name: 'Motion',
+    description: 'Animated/motion-design works (Reels, Motion Posters, Short Motion Graphics)',
+    isActive: true,
+    isSystemDefault: true,
+  },
+  {
+    id: 'wt-other',
+    name: 'Other',
+    description: 'Anything that does not fit above categories (Allows custom specification)',
+    isActive: true,
+    isSystemDefault: true,
+  },
+];
+
+export const initialDesignCategories: DesignCategory[] = [
+  { id: 'cat-1', name: 'Poster', description: 'Event and promotional static posters', isActive: true, displayOrder: 1 },
+  { id: 'cat-2', name: 'Motion', description: 'Animated motion graphics & teasers', isActive: true, displayOrder: 2 },
+  { id: 'cat-3', name: 'Social Media', description: 'Feed posters, stories and carousels', isActive: true, displayOrder: 3 },
+  { id: 'cat-4', name: 'Branding', description: 'Brand identity kits and brand assets', isActive: true, displayOrder: 4 },
+  { id: 'cat-5', name: 'Logo', description: 'Primary marks, badges and monograms', isActive: true, displayOrder: 5 },
+  { id: 'cat-6', name: 'Flyer', description: 'Handouts, circulars and leaflets', isActive: true, displayOrder: 6 },
+  { id: 'cat-7', name: 'Invitation', description: 'Weddings, VIP cards, program invites', isActive: true, displayOrder: 7 },
+  { id: 'cat-8', name: 'Banner', description: 'Outdoor vinyl flex, hoardings & standees', isActive: true, displayOrder: 8 },
+  { id: 'cat-9', name: 'Certificate', description: 'Appreciation & commemorative awards', isActive: true, displayOrder: 9 },
+  { id: 'cat-10', name: 'Visiting Card', description: 'Spot UV, velvet matte business cards', isActive: true, displayOrder: 10 },
+  { id: 'cat-11', name: 'Brochure', description: 'Bi-fold & tri-fold marketing collateral', isActive: true, displayOrder: 11 },
+  { id: 'cat-12', name: 'Video', description: 'Reels, promo shorts & motion cuts', isActive: true, displayOrder: 12 },
+  { id: 'cat-13', name: 'Photo Editing', description: 'Studio portrait & color grading', isActive: true, displayOrder: 13 },
+  { id: 'cat-14', name: 'Printing', description: 'Offset, digital & specialty print works', isActive: true, displayOrder: 14 },
+  { id: 'cat-15', name: 'Other', description: 'Specialized or bespoke creative briefs', isActive: true, displayOrder: 15 },
+];
+
+export const initialWorkCategories: string[] = initialDesignCategories.map((c) => c.name);
+
+export const initialDesigners: CustomDesigner[] = [
+  {
+    id: 'des-ahmed',
+    name: 'Ahmed',
+    type: 'Portal Staff',
+    phone: '+91 98458 79017',
+    whatsapp: '919845879017',
+    email: 'ahmed@gizmostudio.in',
+    roleSpecialization: 'Lead Visual Designer & Typography',
+    notes: 'In-house lead designer for corporate brands & motion posters',
+    isActive: true,
+    createdAt: '2026-06-01',
+  },
+  {
+    id: 'des-fayis',
+    name: 'Fayis Designer',
+    type: 'Portal Staff',
+    phone: '+91 94471 28409',
+    whatsapp: '919447128409',
+    email: 'fayis@gizmostudio.in',
+    roleSpecialization: 'Arabic Calligraphy & Event Graphics',
+    notes: 'In-house designer for institutional posters & press artworks',
+    isActive: true,
+    createdAt: '2026-06-15',
+  },
+  {
+    id: 'des-arjun',
+    name: 'Arjun Graphics',
+    type: 'Portal Staff',
+    phone: '+91 97410 88231',
+    whatsapp: '919741088231',
+    email: 'arjun@gizmostudio.in',
+    roleSpecialization: 'Outdoor Flex, Signage & Fast Socials',
+    notes: 'Fast turnaround specialist for local commercial works',
+    isActive: true,
+    createdAt: '2026-07-10',
+  },
+  {
+    id: 'des-ashi',
+    name: 'Ashi Designs',
+    type: 'External Designer',
+    phone: '+91 94460 33412',
+    whatsapp: '919446033412',
+    email: 'ashi.creative@gmail.com',
+    roleSpecialization: 'Packaging, 3D Renders & Gold Foil',
+    notes: 'Independent freelancer based in Calicut; reachable on WhatsApp',
+    isActive: true,
+    createdAt: '2026-08-01',
+  },
+  {
+    id: 'des-studiox',
+    name: 'Studio X',
+    type: 'External Designer',
+    phone: '+91 98951 88723',
+    whatsapp: '919895188723',
+    email: 'hello@studioxdesign.com',
+    roleSpecialization: '3D Motion, After Effects & Reel Graphics',
+    notes: 'External creative agency partner for animated projects',
+    isActive: true,
+    createdAt: '2026-08-15',
+  },
+  {
+    id: 'des-anas',
+    name: 'Anas Motion',
+    type: 'External Designer',
+    phone: '+91 98472 65432',
+    whatsapp: '919847265432',
+    email: 'anas.motionlab@gmail.com',
+    roleSpecialization: 'Kinetic Typography & Social Reels',
+    notes: 'External motion artist on standby for seasonal campaigns',
+    isActive: true,
+    createdAt: '2026-08-20',
+  },
+];
+
 export const initialLocalWorks: LocalWork[] = [
   {
     id: 'lw-1',
-    title: 'Eid Poster Design',
-    clientId: 'client-4',
-    clientName: 'Eid Celebration Committee',
+    workId: 'LW-0001',
+    title: 'SNEC Annual Day Poster & Social Graphics',
+    clientId: 'client-1',
+    clientName: 'DARUL HASANIYYAH SNEC',
+    clientPhone: '+91 94471 28409',
+    clientWhatsApp: '919447128409',
+    clientOrg: 'Darul Hasaniyyah Educational Council',
+    clientLocation: 'Vengara, Malappuram',
     workType: 'Poster',
+    category: 'Poster',
     amount: 2500,
-    status: 'Delivered',
-    date: '2026-08-15',
-    notes: 'Multi-lingual Arabic & Malayalam commemorative poster artwork for print.',
+    totalAmount: 2500,
+    amountGot: 2500,
+    amountToGet: 0,
+    paymentStatus: 'Paid',
+    paymentRecords: [
+      {
+        id: 'pr-lw1-1',
+        amount: 2500,
+        date: '2026-09-08',
+        method: 'UPI',
+        note: 'Full advance payment via GPay',
+      },
+    ],
+    status: 'In Progress',
+    priority: 'Urgent',
+    assignedTo: 'Fayis Designer',
+    supportingDesigners: ['Ahmed'],
+    date: '2026-09-08',
+    receivedDate: '2026-09-08',
+    deadlineDate: '2026-09-10',
+    deadlineTime: '16:30',
+    notes: 'Multi-lingual Arabic & Malayalam commemorative poster artwork for print. High-res vector format for 18x24 inch glossy print.',
+    revisionCount: 1,
+    revisions: [
+      {
+        revisionNo: 1,
+        date: '2026-09-09',
+        note: 'Updated guest speaker title and corrected Malayalam typography.',
+      },
+    ],
+    attachments: [
+      {
+        id: 'att-1',
+        name: 'SNEC_Official_Emblem.svg',
+        type: 'image/svg+xml',
+        size: '142 KB',
+        category: 'Design reference',
+        uploadedAt: '2026-09-08',
+      },
+      {
+        id: 'att-2',
+        name: 'Poster_Draft_v1.png',
+        type: 'image/png',
+        size: '2.4 MB',
+        category: 'Final design',
+        uploadedAt: '2026-09-09',
+      },
+    ],
+    history: [
+      {
+        id: 'hist-lw1-1',
+        timestamp: '08 Sep 2026 · 10:30 AM',
+        action: 'Work order created',
+        note: 'Order initiated for SNEC Annual Day',
+      },
+      {
+        id: 'hist-lw1-2',
+        timestamp: '08 Sep 2026 · 11:15 AM',
+        action: 'Assigned to Fayis Designer',
+      },
+      {
+        id: 'hist-lw1-3',
+        timestamp: '08 Sep 2026 · 02:00 PM',
+        action: 'Status changed to In Progress',
+      },
+      {
+        id: 'hist-lw1-4',
+        timestamp: '09 Sep 2026 · 04:30 PM',
+        action: 'Revision 1 requested by client',
+        note: 'Updated guest speaker title & Malayalam typography',
+      },
+    ],
   },
   {
     id: 'lw-2',
+    workId: 'LW-0002',
     title: 'Institutional Seal & Letterhead Press',
     clientId: 'client-1',
     clientName: 'DARUL HASANIYYAH SNEC',
-    workType: 'Seal',
+    clientPhone: '+91 94471 28409',
+    clientWhatsApp: '919447128409',
+    clientOrg: 'Darul Hasaniyyah Educational Council',
+    clientLocation: 'Vengara, Malappuram',
+    workType: 'Other',
+    otherWorkTypeDetail: 'Institutional Seal & Letterhead Press',
+    category: 'Printing',
     amount: 500,
+    totalAmount: 500,
+    amountGot: 500,
+    amountToGet: 0,
+    paymentStatus: 'Paid',
+    paymentRecords: [
+      {
+        id: 'pr-lw2-1',
+        amount: 500,
+        date: '2026-09-06',
+        method: 'Cash',
+        note: 'Counter cash received',
+      },
+    ],
     status: 'Completed',
-    date: '2026-08-19',
-    notes: '250gsm parchment printing and wooden rubber stamp fabrication.',
+    priority: 'Normal',
+    assignedTo: 'Ahmed',
+    date: '2026-09-06',
+    receivedDate: '2026-09-06',
+    deadlineDate: '2026-09-09',
+    deadlineTime: '14:00',
+    notes: '250gsm parchment printing and wooden rubber stamp fabrication. 2 stamp copies delivered to campus office.',
+    revisionCount: 0,
+    attachments: [
+      {
+        id: 'att-3',
+        name: 'Seal_Blueprint_Approval.pdf',
+        type: 'application/pdf',
+        size: '640 KB',
+        category: 'Brief',
+        uploadedAt: '2026-09-06',
+      },
+    ],
+    history: [
+      {
+        id: 'hist-lw2-1',
+        timestamp: '06 Sep 2026 · 09:15 AM',
+        action: 'Work order created',
+      },
+      {
+        id: 'hist-lw2-2',
+        timestamp: '07 Sep 2026 · 03:00 PM',
+        action: 'Fabrication completed in workshop',
+      },
+      {
+        id: 'hist-lw2-3',
+        timestamp: '09 Sep 2026 · 01:45 PM',
+        action: 'Marked Completed & Delivered',
+        note: 'Handed over with invoice acknowledgment',
+      },
+    ],
   },
   {
     id: 'lw-3',
-    title: 'Craft & Co Autumn Sale Banner',
+    workId: 'LW-0003',
+    title: 'Craft & Co Autumn Sale Flex Banner',
     clientId: 'client-5',
     clientName: 'Craft & Co Boutique',
-    workType: 'Banner',
+    clientPhone: '+91 98450 77123',
+    clientWhatsApp: '919845077123',
+    clientOrg: 'Craft & Co Lifestyle',
+    clientLocation: 'Heritage Mall, Mangaluru',
+    workType: 'Poster',
+    category: 'Banner',
     amount: 3200,
-    status: 'Pending',
-    date: '2026-09-02',
-    notes: 'Vinyl flex board 10x4 ft for showroom entrance.',
+    totalAmount: 3200,
+    amountGot: 1500,
+    amountToGet: 1700,
+    paymentStatus: 'Partially Paid',
+    paymentRecords: [
+      {
+        id: 'pr-lw3-1',
+        amount: 1500,
+        date: '2026-09-07',
+        method: 'UPI',
+        note: 'Advance booking payment',
+      },
+    ],
+    status: 'Revision',
+    priority: 'High',
+    assignedTo: 'Arjun Graphics',
+    date: '2026-09-07',
+    receivedDate: '2026-09-07',
+    deadlineDate: '2026-09-11',
+    deadlineTime: '18:00',
+    notes: 'Vinyl flex board 10x4 ft for showroom exterior entrance. Eyelets on all 4 corners.',
+    revisionCount: 2,
+    revisions: [
+      {
+        revisionNo: 1,
+        date: '2026-09-08',
+        note: 'Change background from pastel to warm earthy amber.',
+      },
+      {
+        revisionNo: 2,
+        date: '2026-09-09',
+        note: 'Emphasize "UP TO 40% OFF" badge in bolder type.',
+      },
+    ],
+    attachments: [
+      {
+        id: 'att-4',
+        name: 'Storefront_Dimensions.jpg',
+        type: 'image/jpeg',
+        size: '1.8 MB',
+        category: 'Brief',
+        uploadedAt: '2026-09-07',
+      },
+    ],
+    history: [
+      {
+        id: 'hist-lw3-1',
+        timestamp: '07 Sep 2026 · 11:40 AM',
+        action: 'Work order created',
+      },
+      {
+        id: 'hist-lw3-2',
+        timestamp: '08 Sep 2026 · 10:20 AM',
+        action: 'Advance payment recorded (₹1,500)',
+      },
+      {
+        id: 'hist-lw3-3',
+        timestamp: '09 Sep 2026 · 05:10 PM',
+        action: 'Revision 2 requested',
+        note: 'Client requested larger sale badge',
+      },
+    ],
+  },
+  {
+    id: 'lw-4',
+    workId: 'LW-0004',
+    title: 'Apex Retail VIP Launch Invitation Cards',
+    clientId: 'client-2',
+    clientName: 'Apex Retail Brands',
+    clientPhone: '+91 98860 41235',
+    clientWhatsApp: '919886041235',
+    clientOrg: 'Apex Retail India Pvt Ltd',
+    clientLocation: 'Industrial Zone, Bengaluru',
+    workType: 'Poster',
+    category: 'Invitation',
+    amount: 4800,
+    totalAmount: 4800,
+    amountGot: 0,
+    amountToGet: 4800,
+    paymentStatus: 'Not Paid',
+    paymentRecords: [],
+    status: 'Waiting for Client',
+    priority: 'Normal',
+    assignedTo: 'Ashi Designs',
+    date: '2026-09-08',
+    receivedDate: '2026-09-08',
+    deadlineDate: '2026-09-12',
+    deadlineTime: '12:00',
+    notes: 'Premium gold-foil embossed invitation card design (5x7 inch) with matching envelope sleeve.',
+    revisionCount: 0,
+    attachments: [
+      {
+        id: 'att-5',
+        name: 'Gold_Foil_Sample.jpg',
+        type: 'image/jpeg',
+        size: '890 KB',
+        category: 'Design reference',
+        uploadedAt: '2026-09-08',
+      },
+    ],
+    history: [
+      {
+        id: 'hist-lw4-1',
+        timestamp: '08 Sep 2026 · 03:20 PM',
+        action: 'Work order created',
+      },
+      {
+        id: 'hist-lw4-2',
+        timestamp: '09 Sep 2026 · 11:30 AM',
+        action: 'Draft shared with client; Waiting for text sign-off',
+      },
+    ],
+  },
+  {
+    id: 'lw-5',
+    workId: 'LW-0005',
+    title: 'Lumin Studio Minimal Visiting Cards',
+    clientId: 'client-3',
+    clientName: 'Lumin Studio',
+    clientPhone: '+91 97410 98512',
+    clientWhatsApp: '919741098512',
+    clientOrg: 'Lumin Media & Architecture',
+    clientLocation: 'Koramangala, Bengaluru',
+    workType: 'Other',
+    otherWorkTypeDetail: 'Visiting Cards Press',
+    category: 'Visiting Card',
+    amount: 1200,
+    totalAmount: 1200,
+    amountGot: 1200,
+    amountToGet: 0,
+    paymentStatus: 'Paid',
+    paymentRecords: [
+      {
+        id: 'pr-lw5-1',
+        amount: 1200,
+        date: '2026-09-09',
+        method: 'UPI',
+        note: 'UPI settlement',
+      },
+    ],
+    status: 'Ready',
+    priority: 'Normal',
+    assignedTo: 'Ahmed',
+    date: '2026-09-09',
+    receivedDate: '2026-09-09',
+    deadlineDate: '2026-09-10',
+    deadlineTime: '18:30',
+    notes: '400gsm velvet matte laminated business cards with spot UV gloss on logo mark. Ready for dispatch.',
+    revisionCount: 1,
+    attachments: [
+      {
+        id: 'att-6',
+        name: 'Visiting_Card_PrintReady_CMYK.pdf',
+        type: 'application/pdf',
+        size: '3.1 MB',
+        category: 'Final design',
+        uploadedAt: '2026-09-10',
+      },
+    ],
+    history: [
+      {
+        id: 'hist-lw5-1',
+        timestamp: '09 Sep 2026 · 01:10 PM',
+        action: 'Work order created',
+      },
+      {
+        id: 'hist-lw5-2',
+        timestamp: '10 Sep 2026 · 10:00 AM',
+        action: 'Status changed to Ready',
+        note: 'Spot UV printing inspected and approved',
+      },
+    ],
+  },
+  {
+    id: 'lw-6',
+    workId: 'LW-0006',
+    title: 'Malabar Food Fest Tri-Fold Menu Booklet',
+    clientId: 'client-6',
+    clientName: 'Malabar Heritage Foods',
+    clientPhone: '+91 98950 12345',
+    clientWhatsApp: '919895012345',
+    clientOrg: 'Malabar Heritage Hospitality',
+    clientLocation: 'Calicut Beach Road, Kozhikode',
+    workType: 'Poster',
+    category: 'Flyer',
+    amount: 3500,
+    totalAmount: 3500,
+    amountGot: 0,
+    amountToGet: 3500,
+    paymentStatus: 'Not Paid',
+    paymentRecords: [],
+    status: 'New',
+    priority: 'Urgent',
+    assignedTo: 'Fayis Designer',
+    date: '2026-09-10',
+    receivedDate: '2026-09-10',
+    deadlineDate: '2026-09-10',
+    deadlineTime: '15:00',
+    notes: 'A4 tri-fold laminated food festival menu. Needs rustic wood texture background and clean Arabic/English price list.',
+    revisionCount: 0,
+    attachments: [],
+    history: [
+      {
+        id: 'hist-lw6-1',
+        timestamp: '10 Sep 2026 · 09:00 AM',
+        action: 'Work order created via WhatsApp brief',
+      },
+    ],
+  },
+  {
+    id: 'lw-7',
+    workId: 'LW-0007',
+    title: 'Kerala Monsoon Travel Reel Cover & Carousel',
+    clientId: 'client-7',
+    clientName: 'Wayanad Eco Retreat',
+    clientPhone: '+91 94460 33211',
+    clientWhatsApp: '919446033211',
+    clientOrg: 'Eco Tourism Ventures',
+    clientLocation: 'Meppadi, Wayanad',
+    workType: 'Motion',
+    category: 'Social Media',
+    amount: 1800,
+    totalAmount: 1800,
+    amountGot: 500,
+    amountToGet: 1300,
+    paymentStatus: 'Partially Paid',
+    paymentRecords: [
+      {
+        id: 'pr-lw7-1',
+        amount: 500,
+        date: '2026-09-09',
+        method: 'Bank Transfer',
+        note: 'Token advance payment',
+      },
+    ],
+    status: 'Assigned',
+    priority: 'Normal',
+    assignedTo: 'Studio X',
+    supportingDesigners: ['Arjun Graphics'],
+    date: '2026-09-09',
+    receivedDate: '2026-09-09',
+    deadlineDate: '2026-09-13',
+    deadlineTime: '16:00',
+    notes: 'Instagram 1080x1350 5-slide carousel showcasing monsoon misty cottage views and pricing.',
+    revisionCount: 0,
+    attachments: [],
+    history: [
+      {
+        id: 'hist-lw7-1',
+        timestamp: '09 Sep 2026 · 04:00 PM',
+        action: 'Work order created',
+      },
+      {
+        id: 'hist-lw7-2',
+        timestamp: '10 Sep 2026 · 08:30 AM',
+        action: 'Assigned to Studio X (External Partner)',
+      },
+    ],
+  },
+  {
+    id: 'lw-8',
+    workId: 'LW-0008',
+    title: 'Apex Brand 3D Kinetic Logo Sting',
+    clientId: 'client-2',
+    clientName: 'Apex Retail Brands',
+    clientPhone: '+91 98860 41235',
+    clientWhatsApp: '919886041235',
+    clientOrg: 'Apex Retail India Pvt Ltd',
+    clientLocation: 'Industrial Zone, Bengaluru',
+    workType: 'Motion',
+    category: 'Motion',
+    amount: 5200,
+    totalAmount: 5200,
+    amountGot: 5200,
+    amountToGet: 0,
+    paymentStatus: 'Paid',
+    paymentRecords: [
+      {
+        id: 'pr-lw8-1',
+        amount: 5200,
+        date: '2026-09-09',
+        method: 'Bank Transfer',
+        note: 'Full advance transfer',
+      },
+    ],
+    status: 'In Progress',
+    priority: 'Urgent',
+    assignedTo: 'Anas Motion',
+    supportingDesigners: ['Studio X'],
+    date: '2026-09-09',
+    receivedDate: '2026-09-09',
+    deadlineDate: '2026-09-11',
+    deadlineTime: '15:00',
+    notes: '8-second 4K 60fps logo animation with custom sound design for video podcast opening bumper.',
+    revisionCount: 1,
+    attachments: [],
+    history: [
+      {
+        id: 'hist-lw8-1',
+        timestamp: '09 Sep 2026 · 02:00 PM',
+        action: 'Work order created',
+      },
+      {
+        id: 'hist-lw8-2',
+        timestamp: '09 Sep 2026 · 03:30 PM',
+        action: 'Assigned to Anas Motion (External)',
+      },
+    ],
   },
 ];
 
@@ -682,9 +1244,138 @@ const STORAGE_KEYS = {
   SETTINGS: 'gizmo_portal_settings_v1',
   CLIENTS: 'gizmo_portal_clients_v1',
   PROJECTS: 'gizmo_portal_projects_v1',
-  LOCAL_WORKS: 'gizmo_portal_local_works_v1',
+  LOCAL_WORKS: 'gizmo_portal_local_works_v3',
   DEADLINES: 'gizmo_portal_deadlines_v1',
+  CATEGORIES: 'gizmo_portal_categories_v1',
+  DESIGN_CATEGORIES: 'gizmo_portal_design_categories_v2',
+  DESIGNERS: 'gizmo_portal_designers_v1',
+  WORK_TYPES: 'gizmo_portal_work_types_v1',
+  SMART_DEFAULTS: 'gizmo_portal_smart_defaults_v1',
 };
+
+export function loadWorkTypes(): WorkTypeItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.WORK_TYPES);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading work types from localStorage', e);
+  }
+  return initialWorkTypes;
+}
+
+export function saveWorkTypes(workTypes: WorkTypeItem[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.WORK_TYPES, JSON.stringify(workTypes));
+  } catch (e) {
+    console.warn('Error saving work types', e);
+  }
+}
+
+export function loadDesignCategories(): DesignCategory[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DESIGN_CATEGORIES);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading design categories from localStorage', e);
+  }
+  return initialDesignCategories;
+}
+
+export function saveDesignCategories(categories: DesignCategory[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.DESIGN_CATEGORIES, JSON.stringify(categories));
+    // Also sync string list for backward compatibility
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories.map((c) => c.name)));
+  } catch (e) {
+    console.warn('Error saving design categories', e);
+  }
+}
+
+export function loadDesigners(): CustomDesigner[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DESIGNERS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading designers from localStorage', e);
+  }
+  return initialDesigners;
+}
+
+export function saveDesigners(designers: CustomDesigner[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.DESIGNERS, JSON.stringify(designers));
+  } catch (e) {
+    console.warn('Error saving designers', e);
+  }
+}
+
+export interface SmartDefaults {
+  lastWorkType?: string;
+  lastCategory?: string;
+  defaultDesigner?: string;
+}
+
+export function loadSmartDefaults(): SmartDefaults {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SMART_DEFAULTS);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn('Error reading smart defaults from localStorage', e);
+  }
+  return {
+    lastWorkType: 'Poster',
+    lastCategory: 'Poster',
+    defaultDesigner: undefined,
+  };
+}
+
+export function saveSmartDefaults(defaults: SmartDefaults): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.SMART_DEFAULTS, JSON.stringify(defaults));
+  } catch (e) {
+    console.warn('Error saving smart defaults', e);
+  }
+}
+
+export function loadCategories(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading categories from localStorage', e);
+  }
+  return initialWorkCategories;
+}
+
+export function saveCategories(categories: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+  } catch (e) {
+    console.warn('Error saving categories', e);
+  }
+}
 
 export function loadInvoices(): Invoice[] {
   try {
@@ -770,7 +1461,31 @@ export function loadLocalWorks(): LocalWork[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.LOCAL_WORKS);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed: LocalWork[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((w) => {
+          const total = Number(w.totalAmount ?? w.amount ?? 0);
+          let got = w.amountGot;
+          if (got === undefined || got === null) {
+            got = w.paymentStatus === 'Paid' ? total : w.paymentStatus === 'Partially Paid' ? Math.round(total / 2) : 0;
+          }
+          const numGot = Number(got) || 0;
+          const toGet = Math.max(0, total - numGot);
+          let status: any = w.paymentStatus;
+          if (!status || status === 'Pending') {
+            status = numGot >= total && total > 0 ? 'Paid' : numGot > 0 ? 'Partially Paid' : 'Not Paid';
+          }
+          return {
+            ...w,
+            totalAmount: total,
+            amount: total,
+            amountGot: numGot,
+            amountToGet: toGet,
+            paymentStatus: status,
+            paymentRecords: w.paymentRecords || (numGot > 0 ? [{ id: `pr-init-${w.id}`, amount: numGot, date: w.date || '2026-09-08', method: 'UPI', note: 'Initial payment' }] : []),
+          };
+        });
+      }
     }
   } catch (e) {
     console.warn('Error reading local works from localStorage', e);

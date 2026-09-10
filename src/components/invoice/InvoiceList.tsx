@@ -21,33 +21,59 @@ import { generateInvoicePDF } from '../../utils/pdfGenerator';
 
 interface InvoiceListProps {
   invoices: Invoice[];
-  searchTerm: string;
-  onSearchChange: (val: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (status: string) => void;
-  onView: (invoice: Invoice) => void;
-  onEdit: (invoice: Invoice) => void;
-  onDuplicate: (invoice: Invoice) => void;
-  onDelete: (invoiceId: string) => void;
-  onShare: (invoice: Invoice) => void;
-  onRecordPayment: (invoice: Invoice) => void;
-  onMarkPaid: (invoiceId: string) => void;
+  searchTerm?: string;
+  onSearchChange?: (val: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (status: string) => void;
+  onView?: (invoice: Invoice) => void;
+  onViewInvoice?: (invoice: Invoice) => void;
+  onEdit?: (invoice: Invoice) => void;
+  onEditInvoice?: (invoice: Invoice) => void;
+  onDuplicate?: (invoice: Invoice) => void;
+  onDelete?: (invoiceId: string) => void;
+  onDeleteInvoice?: (invoiceId: string) => void;
+  onShare?: (invoice: Invoice) => void;
+  onShareInvoice?: (invoice: Invoice) => void;
+  onRecordPayment?: (invoice: Invoice) => void;
+  onMarkPaid?: (invoiceId: string) => void;
+  onCreateInvoice?: () => void;
+  onDownloadPdf?: (invoice: Invoice) => void;
+  onOpenSettings?: () => void;
 }
 
 export const InvoiceList: React.FC<InvoiceListProps> = ({
   invoices,
-  searchTerm,
-  onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
+  searchTerm: propSearchTerm,
+  onSearchChange: propOnSearchChange,
+  statusFilter: propStatusFilter,
+  onStatusFilterChange: propOnStatusFilterChange,
   onView,
+  onViewInvoice,
   onEdit,
+  onEditInvoice,
   onDuplicate,
   onDelete,
+  onDeleteInvoice,
   onShare,
+  onShareInvoice,
   onRecordPayment,
   onMarkPaid,
+  onCreateInvoice,
+  onDownloadPdf,
+  onOpenSettings,
 }) => {
+  const [localSearch, setLocalSearch] = useState('');
+  const [localStatus, setLocalStatus] = useState('All');
+
+  const searchTerm = propSearchTerm !== undefined ? propSearchTerm : localSearch;
+  const onSearchChange = propOnSearchChange || setLocalSearch;
+  const statusFilter = propStatusFilter !== undefined ? propStatusFilter : localStatus;
+  const onStatusFilterChange = propOnStatusFilterChange || setLocalStatus;
+
+  const handleView = onView || onViewInvoice || (() => {});
+  const handleEdit = onEdit || onEditInvoice || (() => {});
+  const handleDelete = onDelete || onDeleteInvoice || (() => {});
+  const handleShare = onShare || onShareInvoice || (() => {});
   // Action dropdown state
   const [openActionId, setOpenActionId] = useState<string | null>(null);
   
@@ -419,7 +445,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                       {/* View Action */}
                       <button
                         title="View Invoice"
-                        onClick={() => onView(inv)}
+                        onClick={() => handleView(inv)}
                         className="p-1.5 text-slate-500 hover:text-violet-700 hover:bg-violet-100 rounded-lg transition"
                       >
                         <Eye className="w-4 h-4" />
@@ -428,7 +454,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                       {/* Edit Action */}
                       <button
                         title="Edit Invoice"
-                        onClick={() => onEdit(inv)}
+                        onClick={() => handleEdit(inv)}
                         className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -455,7 +481,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                       {/* Share Action */}
                       <button
                         title="Share via WhatsApp or Email"
-                        onClick={() => onShare(inv)}
+                        onClick={() => handleShare(inv)}
                         className="p-1.5 text-slate-500 hover:text-violet-700 hover:bg-violet-100 rounded-lg transition hidden md:inline-flex"
                       >
                         <Share2 className="w-4 h-4" />
@@ -479,7 +505,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                           >
                             <button
                               onClick={() => {
-                                onView(inv);
+                                handleView(inv);
                                 setOpenActionId(null);
                               }}
                               className="w-full text-left px-3.5 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
@@ -490,7 +516,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
 
                             <button
                               onClick={() => {
-                                onEdit(inv);
+                                handleEdit(inv);
                                 setOpenActionId(null);
                               }}
                               className="w-full text-left px-3.5 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
@@ -523,7 +549,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
 
                             <button
                               onClick={() => {
-                                onShare(inv);
+                                handleShare(inv);
                                 setOpenActionId(null);
                               }}
                               className="w-full text-left px-3.5 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
@@ -561,7 +587,7 @@ export const InvoiceList: React.FC<InvoiceListProps> = ({
                             <div className="h-px bg-slate-100 my-1"></div>
                             <button
                               onClick={() => {
-                                onDelete(inv.id);
+                                handleDelete(inv.id);
                                 setOpenActionId(null);
                               }}
                               className="w-full text-left px-3.5 py-2 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2"

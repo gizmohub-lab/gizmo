@@ -39,19 +39,131 @@ export interface Project {
   createdAt: string;
 }
 
+export type LocalWorkStatus =
+  | 'New'
+  | 'Assigned'
+  | 'In Progress'
+  | 'Waiting for Client'
+  | 'Revision'
+  | 'Ready'
+  | 'Completed'
+  | 'Cancelled'
+  | 'Pending'
+  | 'Delivered'
+  | 'Invoiced';
+
+export type LocalWorkPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
+
+export type PaymentStatus =
+  | 'Not Paid'
+  | 'Partially Paid'
+  | 'Paid'
+  | 'Overpaid'
+  | 'Pending'
+  | 'Not Applicable';
+
+export interface LocalWorkPaymentRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  amount: number;
+  method?: 'UPI' | 'Cash' | 'Bank Transfer' | 'GPay' | 'PhonePe' | 'Card' | 'Other';
+  note?: string;
+  reference?: string;
+  recordedAt?: string;
+}
+
+export interface LocalWorkAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size?: string;
+  category?: 'Design reference' | 'Client image' | 'Brief' | 'Final design' | 'Other';
+  url?: string;
+  uploadedAt: string;
+}
+
+export interface LocalWorkRevision {
+  revisionNo: number;
+  date: string;
+  note?: string;
+}
+
+export interface LocalWorkHistoryItem {
+  id: string;
+  timestamp: string;
+  action: string;
+  note?: string;
+}
+
+export type DesignerType = 'Portal Staff' | 'External Designer';
+
+export interface CustomDesigner {
+  id: string;
+  name: string;
+  type: DesignerType;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  roleSpecialization?: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export interface DesignCategory {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt?: string;
+}
+
+export interface WorkTypeItem {
+  id: string;
+  name: string; // 'Poster' | 'Motion' | 'Other' | custom
+  description?: string;
+  isActive: boolean;
+  isSystemDefault?: boolean;
+  isSystem?: boolean;
+}
+
+export type LocalWorksSubTab = 'all-works' | 'categories' | 'designers' | 'settings';
+
 export interface LocalWork {
   id: string;
+  workId?: string; // e.g. "LW-0001"
   title: string;
   clientId?: string;
   clientName: string;
-  workType: string;
-  amount: number;
-  status: 'Pending' | 'Completed' | 'Delivered' | 'Invoiced';
-  priority?: 'Normal' | 'Urgent';
-  assignedTo?: string;
-  date: string;
+  clientPhone?: string;
+  clientWhatsApp?: string;
+  clientOrg?: string;
+  clientLocation?: string;
+  workType: string; // 'Poster' | 'Motion' | 'Other' or custom
+  otherWorkTypeDetail?: string; // when 'Other' selected: Admin entered detail
+  category?: string; // Design Work Category, distinct from workType
+  totalAmount?: number; // The full amount charged for the work
+  amount: number; // Maintained for backward compatibility (= totalAmount)
+  amountGot?: number; // The amount already received
+  amountToGet?: number; // Automatically calculated: Total Amount - Amount Got
+  paymentStatus?: PaymentStatus; // Automatically calculated: Not Paid, Partially Paid, Paid, Overpaid
+  paymentRecords?: LocalWorkPaymentRecord[]; // Ledger of received payments
+  status: LocalWorkStatus;
+  priority?: LocalWorkPriority;
+  assignedTo?: string; // Primary Designer
+  supportingDesigners?: string[]; // Optional supporting designer(s)
+  date: string; // Received date YYYY-MM-DD
+  receivedDate?: string;
+  deadlineDate?: string; // YYYY-MM-DD
+  deadlineTime?: string; // HH:mm or 04:30 PM
   notes?: string;
   description?: string;
+  attachments?: LocalWorkAttachment[];
+  revisionCount?: number;
+  revisions?: LocalWorkRevision[];
+  history?: LocalWorkHistoryItem[];
+  invoiceId?: string;
 }
 
 export interface InvoiceItem {
@@ -176,6 +288,31 @@ export interface InvoiceSettings {
 }
 
 export type ActiveTab = 'dashboard' | 'projects' | 'people' | 'local-works' | 'invoice';
+
+export type AppRoute =
+  | 'home'
+  | 'services'
+  | 'work'
+  | 'about'
+  | 'my-projects'
+  | 'admin'
+  | 'admin-dashboard'
+  | 'admin-projects'
+  | 'admin-clients'
+  | 'admin-local-works'
+  | 'admin-invoices'
+  | 'admin-settings';
+
+export interface AdminNotification {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  read: boolean;
+  type: 'urgent' | 'deadline' | 'payment' | 'project' | 'info';
+  targetRoute?: AppRoute;
+  targetId?: string;
+}
 
 export type DeadlineUrgency = 'NORMAL' | 'APPROACHING' | 'URGENT' | 'DUE_NOW' | 'OVERDUE';
 
