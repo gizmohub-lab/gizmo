@@ -47,6 +47,8 @@ export interface LocalWork {
   workType: string;
   amount: number;
   status: 'Pending' | 'Completed' | 'Delivered' | 'Invoiced';
+  priority?: 'Normal' | 'Urgent';
+  assignedTo?: string;
   date: string;
   notes?: string;
   description?: string;

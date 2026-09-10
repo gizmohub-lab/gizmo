@@ -8,7 +8,7 @@ import { InvoicePreviewModal } from './components/invoice/InvoicePreviewModal';
 import { InvoiceSettingsModal } from './components/invoice/InvoiceSettingsModal';
 import { PaymentModal } from './components/invoice/PaymentModal';
 import { ShareModal } from './components/invoice/ShareModal';
-import { DashboardView } from './components/portal/DashboardView';
+import { ProductionDashboard } from './components/portal/ProductionDashboard';
 import { ProjectsView } from './components/portal/ProjectsView';
 import { PeopleView } from './components/portal/PeopleView';
 import { LocalWorksView } from './components/portal/LocalWorksView';
@@ -415,14 +415,10 @@ export default function App() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
-            <DashboardView
-              invoices={invoices}
-              projects={projects}
+            <ProductionDashboard
               localWorks={localWorks}
-              clients={clients}
-              onNavigateTab={(tab) => setActiveTab(tab)}
-              onCreateInvoice={handleStartCreateInvoice}
-              onViewInvoice={(inv) => setPreviewInvoice(inv)}
+              invoices={invoices}
+              onCreateWork={() => setActiveTab('local-works')} 
             />
           )}
 
